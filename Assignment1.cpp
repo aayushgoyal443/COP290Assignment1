@@ -107,6 +107,7 @@ int main(int argc, char** argv){
     setMouseCallback(window_name,hello_again,NULL);
 
     vector<Point2f> a={Point2f(472,52),Point2f(472,830),Point2f(800,830),Point2f(800,52)};
+    a= reorder(a);
     cout<<img.size()<<endl;
     Mat img1_warp;
     string angle_corrected = "angle_corrected_"+name;
