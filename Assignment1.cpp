@@ -94,9 +94,9 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    String window_name = "Original window";
-    String window_name1 = "Projected window";
-    String window_name2 = "Cropped window";
+    String window_name = "Original Image";
+    String window_name1 = "Projected Image";
+    String window_name2 = "Cropped Image";
 
 
     namedWindow(window_name, WINDOW_NORMAL);
