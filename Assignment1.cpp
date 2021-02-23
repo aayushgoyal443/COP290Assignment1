@@ -1,18 +1,12 @@
 #include <opencv2/opencv.hpp>
-
 #include <iostream>
 #include "opencv2/highgui/highgui.hpp"
 
-#define ld long double
-
 using namespace cv;
-
 using namespace std;
 
 
-
 vector<Point2f> b;
-
 
 
 void hello_again(int evt, int x, int y, int flgs, void* usrdata){
@@ -24,8 +18,9 @@ void hello_again(int evt, int x, int y, int flgs, void* usrdata){
     }
 }
 
-ld angle(Point2f a, Point2f b){
-    ld x1,x2,y1,y2,cross,dot,angle;
+// This function gives the angle between 2 position vectors a and b, from a to b, between -pi to pi
+long double angle(Point2f a, Point2f b){
+    long double x1,x2,y1,y2,cross,dot,angle;
     x1 = a.x;
     x2 = b.x;
     y1 = a.y;
@@ -42,6 +37,7 @@ ld angle(Point2f a, Point2f b){
     return angle;
 }
 
+// 
 vector <Point2f> reorder(vector <Point2f> v){
     vector<Point2f> ordered;
     float val=v[0].y+v[0].x;
@@ -85,21 +81,19 @@ vector <Point2f> reorder(vector <Point2f> v){
 }
 
 
-
-
+// argv[1] should contain the name of image file
 int main(int argc, char** argv){
-    Mat original_img=imread("Resources/empty.jpg");
+
+    string name = argv[1];  // name of the inputt file.
+    Mat original_img=imread(name);
     Mat img;
-    cvtColor(original_img,img,COLOR_BGR2GRAY);
+    cvtColor(original_img,img,COLOR_BGR2GRAY);  // This converts the original image to grayscale image.
 
     if(img.empty()){
         cout<<"image not found"<<endl;
         return -1;
     }
 
-
-
-    //cout<<img<<"\n";
     String window_name = "Original window";
     String window_name1 = "Projected window";
     String window_name2 = "Cropped window";
@@ -115,8 +109,11 @@ int main(int argc, char** argv){
     vector<Point2f> a={Point2f(472,52),Point2f(472,830),Point2f(800,830),Point2f(800,52)};
     cout<<img.size()<<endl;
     Mat img1_warp;
+    string angle_corrected = "angle_corrected_"+name;
 
     while(true){
+
+        // When we enter the while loop, the size of b is zero. After clicking 4 points on the window, size becomees 4 and this if condiiton is evaluated
         if(b.size()==4){
             b = reorder(b);
             Mat H=findHomography(b,a);
@@ -126,10 +123,10 @@ int main(int argc, char** argv){
             imshow(window_name1,img1_warp);
 
             //waitKey(100);
-            imwrite("angle_corrected.png",img1_warp);
+            imwrite(angle_corrected,img1_warp);
             break;
         }
-        if(waitKey(10)==27)return 0;
+        if(waitKey(10)==27)return 0;    // Esc key to close the windo
     }
 
     //waitKey(0);
@@ -143,7 +140,8 @@ int main(int argc, char** argv){
     Mat cropped=img1_warp(region);
     namedWindow(window_name2, WINDOW_NORMAL);
     imshow(window_name2,cropped);
-    imwrite("cropped.png",cropped);
+    string cropped_name = "cropped_"+name;
+    imwrite(cropped_name,cropped);
     
     waitKey(0);
 
