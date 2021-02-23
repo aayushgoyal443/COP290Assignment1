@@ -15,18 +15,13 @@ vector<Point2f> b;
 
 
 
-void hello_again(int event, int x, int y, int flags, void* userdata){
+void hello_again(int evt, int x, int y, int flgs, void* usrdata){
 	// cout<<x<<" "<<y<<endl;
-
-    if  ( event == EVENT_LBUTTONDOWN ){
-
+    if  (evt == EVENT_LBUTTONDOWN ){
         b.push_back(Point2f(x,y));
         cout<<b.size()<<endl;
-
         cout<<x<<" "<<y<<endl;
-
     }
-
 }
 
 ld angle(Point2f a, Point2f b){
@@ -44,12 +39,10 @@ ld angle(Point2f a, Point2f b){
         if (angle < 0) angle = -1*(M_PI)- angle;
         else angle = M_PI - angle;
     }
-
     return angle;
 }
 
 vector <Point2f> reorder(vector <Point2f> v){
-
     vector<Point2f> ordered;
     float val=v[0].y+v[0].x;
     ordered.push_back(v[0]);
@@ -95,40 +88,65 @@ vector <Point2f> reorder(vector <Point2f> v){
 
 
 int main(int argc, char** argv){
-    Mat img=imread("Resources/empty.jpg");
+    Mat original_img=imread("Resources/empty.jpg");
+    Mat img;
+    cvtColor(original_img,img,COLOR_BGR2GRAY);
+
     if(img.empty()){
-
         cout<<"image not found"<<endl;
-
         return -1;
-
     }
+
+
+
     //cout<<img<<"\n";
-    String window_name = "My First Video";
+    String window_name = "Original window";
+    String window_name1 = "Projected window";
+    String window_name2 = "Cropped window";
 
 
     namedWindow(window_name, WINDOW_NORMAL);
-
     imshow(window_name,img);
-    waitKey(100);
+
+    //waitKey(100);
+
     setMouseCallback(window_name,hello_again,NULL);
+
     vector<Point2f> a={Point2f(472,52),Point2f(472,830),Point2f(800,830),Point2f(800,52)};
     cout<<img.size()<<endl;
-    
+    Mat img1_warp;
+
     while(true){
         if(b.size()==4){
             b = reorder(b);
             Mat H=findHomography(b,a);
-            Mat img1_warp;
             warpPerspective(img,img1_warp,H,img.size());
-            imshow(window_name,img1_warp);
-            waitKey(100);
+
+            namedWindow(window_name1, WINDOW_NORMAL);
+            imshow(window_name1,img1_warp);
+
+            //waitKey(100);
+            imwrite("angle_corrected.png",img1_warp);
             break;
         }
-        if(waitKey(10)==27)break;
+        if(waitKey(10)==27)return 0;
     }
 
+    //waitKey(0);
+    Rect region;
+
+    region.x=472;
+    region.y=52;
+    region.width=800-472;
+    region.height=830-52;
+
+    Mat cropped=img1_warp(region);
+    namedWindow(window_name2, WINDOW_NORMAL);
+    imshow(window_name2,cropped);
+    imwrite("cropped.png",cropped);
+    
     waitKey(0);
+
     return 0;
 
 }
