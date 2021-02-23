@@ -132,10 +132,10 @@ int main(int argc, char** argv){
     //waitKey(0);
     Rect region;
 
-    region.x=472;
-    region.y=52;
-    region.width=800-472;
-    region.height=830-52;
+    region.x=a[0].x;
+    region.y=a[0].y;
+    region.width=a[2].x-a[0].x;
+    region.height=a[2].y-a[0].y;
 
     Mat cropped=img1_warp(region);
     namedWindow(window_name2, WINDOW_NORMAL);
