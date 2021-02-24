@@ -9,6 +9,9 @@ using namespace std;
 vector<Point2f> b;
 
 
+
+/*callback function used by setMouseCallback*/
+
 void hello_again(int evt, int x, int y, int flgs, void* usrdata){
 	// cout<<x<<" "<<y<<endl;
     if  (evt == EVENT_LBUTTONDOWN ){
@@ -37,7 +40,7 @@ long double angle(Point2f a, Point2f b){
     return angle;
 }
 
-// 
+/*reorders the points in a vector in anticlockwise sense*/ 
 vector <Point2f> reorder(vector <Point2f> v){
     vector<Point2f> ordered;
     float val=v[0].y+v[0].x;
@@ -85,7 +88,7 @@ vector <Point2f> reorder(vector <Point2f> v){
 int main(int argc, char** argv){
 
     string name = argv[1];  // name of the inputt file.
-    Mat original_img=imread(name);
+    Mat original_img=imread(name);    
     Mat img;
     cvtColor(original_img,img,COLOR_BGR2GRAY);  // This converts the original image to grayscale image.
 
@@ -94,55 +97,56 @@ int main(int argc, char** argv){
         return -1;
     }
 
-    String window_name = "Original Image";
+    String window_name = "Original Image";           //window names
     String window_name1 = "Projected Image";
     String window_name2 = "Cropped Image";
 
 
-    namedWindow(window_name, WINDOW_NORMAL);
+    namedWindow(window_name, WINDOW_NORMAL);          //creating window
     imshow(window_name,img);
 
     //waitKey(100);
 
-    setMouseCallback(window_name,hello_again,NULL);
+    setMouseCallback(window_name,hello_again,NULL);         //setting mouse callbacks for detecting mouse actions
+    int x0=472, y0=52, x1=472, y1=830, x2=800, y2=830, x3=800, y3=52;        //coordinates of the points where the selected points on the window will be mapped
 
-    vector<Point2f> a={Point2f(472,52),Point2f(472,830),Point2f(800,830),Point2f(800,52)};
-    a= reorder(a);
+    vector<Point2f> a={Point2f(x0,y0),Point2f(x1,y1),Point2f(x2,y2),Point2f(x3,y3)};
+    a= reorder(a);                                           // reordering the vector of selected points in anticlockwise direction
     cout<<img.size()<<endl;
     Mat img1_warp;
     string angle_corrected = "angle_corrected_"+name;
 
     while(true){
 
-        // When we enter the while loop, the size of b is zero. After clicking 4 points on the window, size becomees 4 and this if condiiton is evaluated
+        // When we enter the while loop, the size of b is zero. After clicking 4 points on the window, size becomees 4 and this condition is evaluated
         if(b.size()==4){
             b = reorder(b);
-            Mat H=findHomography(b,a);
-            warpPerspective(img,img1_warp,H,img.size());
+            Mat H=findHomography(b,a);                  //homography matrix
+            warpPerspective(img,img1_warp,H,img.size());              //img1_warp stores the image data after angle correction 
 
             namedWindow(window_name1, WINDOW_NORMAL);
-            imshow(window_name1,img1_warp);
+            imshow(window_name1,img1_warp);                  //showing the image after angle correction
 
             //waitKey(100);
-            imwrite(angle_corrected,img1_warp);
+            imwrite(angle_corrected,img1_warp);              //saving the angle corrected image
             break;
         }
-        if(waitKey(10)==27)return 0;    // Esc key to close the windo
+        if(waitKey(10)==27)return 0;    // Esc key to close the window
     }
 
     //waitKey(0);
-    Rect region;
+    Rect region;                      //region shows the section of window which is to be cropped
 
     region.x=a[0].x;
     region.y=a[0].y;
     region.width=a[2].x-a[0].x;
     region.height=a[2].y-a[0].y;
 
-    Mat cropped=img1_warp(region);
+    Mat cropped=img1_warp(region);           //image data of cropped image
     namedWindow(window_name2, WINDOW_NORMAL);
-    imshow(window_name2,cropped);
+    imshow(window_name2,cropped);           //showing the cropped image
     string cropped_name = "cropped_"+name;
-    imwrite(cropped_name,cropped);
+    imwrite(cropped_name,cropped);          //saving the cropped image
     
     waitKey(0);
 
