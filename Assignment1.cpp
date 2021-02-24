@@ -98,16 +98,7 @@ int main(int argc, char** argv){
 
     string name = argv[1];  // name of the inputt file.
 
-    Mat original_img;
-    try{
-        original_img=imread(name);
-    }
-    catch(const exception& e){
-        cout <<"File not found, make sure the image is in same directory";
-        return -1;
-    }
-    
-    Mat original_img=imread(name);
+    Mat original_img =imread(name);
 
     Mat img;
     cvtColor(original_img,img,COLOR_BGR2GRAY);  // This converts the original image to grayscale image.
