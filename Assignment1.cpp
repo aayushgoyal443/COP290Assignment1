@@ -77,8 +77,8 @@ vector <Point2f> reorder(vector <Point2f> v){
     for (int i=0;i<3;i++){
         ordered.push_back(Point2f(shifted[index[i]].x+x0,shifted[index[i]].y+y0));
     } 
-    cout << "final coordinates\n";
-    for (int i=0;i<4;i++) cout << ordered[i].x <<" "<< ordered[i].y<<"\n"; 
+    // cout << "final coordinates\n";
+    // for (int i=0;i<4;i++) cout << ordered[i].x <<" "<< ordered[i].y<<"\n"; 
     
     return ordered;
 }
@@ -87,8 +87,28 @@ vector <Point2f> reorder(vector <Point2f> v){
 // argv[1] should contain the name of image file
 int main(int argc, char** argv){
 
+    if (argc==1){
+        cout << "You need to pass both ./output and image_file name as parameters\n";
+        return 0;
+    }
+    else if (argc>2){
+        cout <<"Only 1 image file can be processed at a time.\n";
+        return 0;
+    }
+
     string name = argv[1];  // name of the inputt file.
-    Mat original_img=imread(name);    
+
+    Mat original_img;
+    try{
+        original_img=imread(name);
+    }
+    catch(const exception& e){
+        cout <<"File not found, make sure the image is in same directory";
+        return -1;
+    }
+    
+    Mat original_img=imread(name);
+
     Mat img;
     cvtColor(original_img,img,COLOR_BGR2GRAY);  // This converts the original image to grayscale image.
 
