@@ -27,7 +27,17 @@ void get_frac(Mat frame){
 
 int main(int argc, char* argv[])
 {
-  VideoCapture cap("trafficvideo.mp4"); 
+
+  if (argc==1){
+      cout << "You need to pass both ./part and image_file name as parameters\n";
+      return 0;
+  }
+  else if (argc>2){
+      cout <<"Only 1 image file can be processed at a time.\n";
+      return 0;
+  }
+  
+  VideoCapture cap(argv[1]); 
   if (cap.isOpened() == false)  
   {
     cout << "Cannot open the video file" << endl;
@@ -90,10 +100,36 @@ int main(int argc, char* argv[])
     absdiff(gray_frame,bg_changed,img3);
       
     Mat img3_binary;
-    threshold(img3, img3_binary, 40, 255, THRESH_BINARY);
-    imshow(window_name2, img3_binary);
-    get_frac(img3_binary);
+    threshold(img3, img3_binary, 25, 255, THRESH_BINARY);
+    // imshow(window_name2, img3_binary);
+    // get_frac(img3_binary);
 
+    // Below is the part for calculating Dynamic density 
+    Mat flow(prvs.size(), CV_32FC2);
+    calcOpticalFlowFarneback(prvs, gray_frame, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+
+    Mat flow_parts[2];
+    split(flow, flow_parts);
+    Mat magnitude, angle, magn_norm;
+    cartToPolar(flow_parts[0], flow_parts[1], magnitude, angle, true);
+    normalize(magnitude, magn_norm, 0.0f, 1.0f, NORM_MINMAX);
+    angle *= ((1.f / 360.f) * (180.f / 255.f));
+    //build hsv image
+    Mat _hsv[3], hsv, hsv8, bgr;
+    _hsv[0] = angle;
+    _hsv[1] = Mat::ones(angle.size(), CV_32F);
+    _hsv[2] = magn_norm;
+    merge(_hsv, 3, hsv);
+    hsv.convertTo(hsv8, CV_8U, 255.0);
+    cvtColor(hsv8, bgr, COLOR_HSV2BGR);
+    
+    cvtColor(bgr,flow,COLOR_BGR2GRAY);
+    Mat flow_binary;
+    threshold(flow, flow_binary, 10, 255, THRESH_BINARY);
+    imshow(window_name2, flow_binary);
+    get_frac(flow_binary);
+
+    gray_frame.copyTo(prvs);
     
     if (waitKey(10) == 27)
     {
