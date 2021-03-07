@@ -10,10 +10,10 @@
 # clean: 
 # 	rm -rf *.o Assignment1.o outputs/Grayscale_empty.jpg output
 
-part2:
+allpart2:
 	g++ assignment1_2.cpp -o part2 -std=c++11 `pkg-config --cflags --libs opencv`
 
-part1: 
+allpart1: 
 	g++ Assignment1.cpp -o part1 -std=c++11 `pkg-config --cflags --libs opencv`
 
 clean:

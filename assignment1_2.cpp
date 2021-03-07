@@ -1,4 +1,3 @@
-
 #include <bits/stdc++.h>
 #include <opencv2/opencv.hpp>
 #include <iostream>
@@ -29,11 +28,11 @@ int main(int argc, char* argv[])
 {
 
   if (argc==1){
-      cout << "You need to pass both ./part and image_file name as parameters\n";
+      cout << "You need to pass both ./part2 and <video_file> name as parameters\n";
       return 0;
   }
   else if (argc>2){
-      cout <<"Only 1 image file can be processed at a time.\n";
+      cout <<"Only 1 video file can be processed at a time.\n";
       return 0;
   }
   
@@ -101,6 +100,7 @@ int main(int argc, char* argv[])
       
     Mat img3_binary;
     threshold(img3, img3_binary, 25, 255, THRESH_BINARY);
+    // Uncomment for finding queue density
     // imshow(window_name2, img3_binary);
     // get_frac(img3_binary);
 
