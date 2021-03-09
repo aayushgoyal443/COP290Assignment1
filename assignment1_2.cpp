@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
   }
 
 
-  Mat bg;   //background image
-  cap.read(bg);
+  Mat bg = imread("background.jpg");   //background image
+  
   Mat bg_changed; //grayscale background image
   cvtColor(bg,bg_changed,COLOR_BGR2GRAY);
 
@@ -87,8 +87,17 @@ int main(int argc, char* argv[])
   region.height=a[2].y-a[0].y;
 
   bg_changed = bg_changed(region); //cropped background
-  Mat prvs;         //previous frame for optical flow
-  bg_changed.copyTo(prvs);
+  
+
+
+  Mat prvs1,prvs,prvs_changed;
+  cap.read(prvs1);         //previous frame for optical flow
+  cvtColor(prvs1,prvs_changed,COLOR_BGR2GRAY);
+  warpPerspective(prvs_changed,prvs_changed,H,prvs_changed.size());  //angle corrected
+
+
+  prvs_changed = prvs_changed(region); //cropped prevframe
+  prvs_changed.copyTo(prvs);
 
   int count=0;    //counter used to set fps processed
 
@@ -127,6 +136,12 @@ int main(int argc, char* argv[])
 
     Mat flow(prvs.size(), CV_32FC2);
 
+
+
+
+
+    /*the below code (in the following 15 lines) for optical flow is directly taken from the official documentation of opencv and we don't claim it be our own work
+    Reference - https://docs.opencv.org/3.4/d4/dee/tutorial_optical_flow.html */
     calcOpticalFlowFarneback(prvs, gray_frame, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
     Mat flow_parts[2];
     split(flow, flow_parts);
