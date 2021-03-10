@@ -176,8 +176,8 @@ int main(int argc, char* argv[])
   ofstream answer;
   answer.open("out.txt");
   //below part stores output in out.txt
-  answer<<"frame_no,queue_density,dynamic_density\n";
-  for(int i=0;i<aa.size();i++) answer<<5*i+1<<","<<aa[i]/tot<<","<<bb[i]/tot<<"\n";
+  answer<<"time_sec,queue_density,dynamic_density\n";
+  for(int i=0;i<aa.size();i++) answer<<(long double)(5*i+1)/15<<","<<aa[i]/tot<<","<<bb[i]/tot<<"\n";
   answer.close();
 
   return 0;
