@@ -4,18 +4,21 @@
 #include <opencv2/video/background_segm.hpp>
 #include "opencv2/highgui/highgui.hpp"
 #include <chrono>
-
 using namespace cv;
 using namespace std;
 using namespace std::chrono;
 
 vector<long double> aa; //for queue density
-
 int NUM_THREADS = 0;
 
-// function to give the fraction of road occupied
+Mat bg_changed; //grayscale background image
+Mat H;
+Rect region; //region shows the section of window which is to be cropped
+vector<Rect> stripes;
+Mat gray_frame;
 
-void get_frac(Mat frame, int flag)
+// function to give the fraction of road occupied
+long double get_frac(Mat frame)
 {
 
     long double cc = 0;
@@ -30,24 +33,31 @@ void get_frac(Mat frame, int flag)
             cc += bgrPixel.val[2];
         }
     }
+    return cc;
+}
 
-    if (flag == 0)
-        aa.push_back(cc); //for queue density
+vector<int> blacksum;
+
+// Function to find the queue density and fill the "aa" vector
+void *findQueue(void *t1)
+{
+    int *id1 = (int *)t1;
+    int id = *id1;
+    Rect strip = stripes[id];
+    Mat img3;
+    Mat gray_frame1 = gray_frame(strip);
+    Mat bg_changed1 = bg_changed(strip);
+    absdiff(gray_frame1, bg_changed1, img3);
+    Mat img3_binary;
+    threshold(img3, img3_binary, 25, 255, THRESH_BINARY);
+    blacksum[id] = get_frac(img3_binary);
+
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
 {
-    //for helping in case of invalid command
-    //   if (argc==1){
-    //       cout << "You need to pass both ./part2 and <video_file> name as parameters\n";
-    //       return 0;
-    //   }
-    //   else if (argc>2){
-    //       cout <<"Only 1 video file can be processed at a time.\n";
-    //       return 0;
-    //   }
-
-    NUM_THREADS = 4;
+    NUM_THREADS = stoi(argv[1]);
 
     auto start = high_resolution_clock::now();
 
@@ -62,25 +72,17 @@ int main(int argc, char *argv[])
 
     Mat bg = imread("background.jpg"); //background image
 
-    Mat bg_changed; //grayscale background image
     cvtColor(bg, bg_changed, COLOR_BGR2GRAY);
-
-    String window_name = "Traffic_Video"; //window names
-
-    //String window_name2 = "Binary video";
-
-    namedWindow(window_name, WINDOW_NORMAL);
-    //namedWindow(window_name2, WINDOW_NORMAL);
 
     //coordinates for finding the homography matrix for angle correction of each frame
     int x0 = 472, y0 = 52, x1 = 472, y1 = 830, x2 = 800, y2 = 830, x3 = 800, y3 = 52;
     vector<Point2f> a = {Point2f(x0, y0), Point2f(x1, y1), Point2f(x2, y2), Point2f(x3, y3)};
     vector<Point2f> b = {Point2f(984, 204), Point2f(264, 1068), Point2f(1542, 1068), Point2f(1266, 222)};
 
-    Mat H = findHomography(b, a);                                  //homography matrix
+    H = findHomography(b, a); //homography matrix
+
     warpPerspective(bg_changed, bg_changed, H, bg_changed.size()); //angle corrected
 
-    Rect region; //region shows the section of window which is to be cropped
     region.x = a[0].x;
     region.y = a[0].y;
     region.width = a[2].x - a[0].x;
@@ -88,10 +90,32 @@ int main(int argc, char *argv[])
 
     bg_changed = bg_changed(region); //cropped background
 
-    int count = 0; //counter used to set fps processed
+    /////// Making NUM_THREADS number regions to divide into strips
+    int hori = bg_changed.cols / NUM_THREADS;
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        Rect r;
+        if (i > 0)
+            r.x = stripes[i - 1].x + stripes[i - 1].width;
+        else
+            r.x = 0;
+        r.y = 0;
+        if (i != NUM_THREADS - 1)
+            r.width = hori;
+        else
+            r.width = bg_changed.cols - r.x;
+        r.height = bg_changed.rows;
+        stripes.push_back(r);
+    }
 
+    int ind[NUM_THREADS] = {};
+    for (int i = 0; i < NUM_THREADS; i++)
+        ind[i] = i;
+
+    int count = 0;
     while (true)
     {
+        blacksum = vector<int>(NUM_THREADS, 0);
         Mat frame;
         bool bSuccess = cap.read(frame);
         if (bSuccess == false)
@@ -99,43 +123,54 @@ int main(int argc, char *argv[])
             cout << "Found the end of the video" << endl;
             break;
         }
-
+        cout << "Frame number: "<<count <<"\n";
         count++;
 
-        // if (count % 5 != 0)
-        //     continue; //setting fps processed using counter
 
-        Mat gray_frame;
-        cvtColor(frame, gray_frame, COLOR_BGR2GRAY); //grayscale current frame
-        //show the frame in the created window
+        cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
+        warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
+        gray_frame = gray_frame(region);
 
-        imshow(window_name, frame);
-        warpPerspective(gray_frame, gray_frame, H, gray_frame.size()); //angle corrected current frame
-        gray_frame = gray_frame(region);                               //cropped current frame
+        //////// CREATING THREADS FOR THEM
+        pthread_t threads[NUM_THREADS];
+        int rc;
 
-        Mat img3;
-        absdiff(gray_frame, bg_changed, img3); //after removing background
+        for (int i = 0; i < NUM_THREADS; i++)
+        {
+            // cout << "main() : creating thread, " << i << endl;
+            rc = pthread_create(&threads[i], NULL, findQueue, &ind[i]);
+            if (rc)
+            {
+                cout << "Error:unable to create thread," << rc << endl;
+                exit(-1);
+            }
+        }
 
-        Mat img3_binary;
-        threshold(img3, img3_binary, 25, 255, THRESH_BINARY); //binary frame after removing bg
+        void *status;
+        for (int i = 0; i < NUM_THREADS; i++)
+        {
+            rc = pthread_join(threads[i], &status);
+            if (rc)
+            {
+                cout << "Error:unable to join," << rc << endl;
+                exit(-1);
+            }
+            // cout << "Main: completed thread id :" << i;
+            // cout << "  exiting with status :" << status << endl;
+        }
 
-        // Uncomment for finding queue density
-        // imshow(window_name2, img3_binary);
-        get_frac(img3_binary, 0); //calculating density
-        // Below is the part for calculating Dynamic density
+        int sum = 0;
+        for (auto x : blacksum)
+            sum += x;
 
-        // if (waitKey(10) == 27)
-        // {
-        //     cout << "Esc key is pressed by user. Stopping the video" << endl;
-        //     break;
-        // }
+        aa.push_back(sum);
     }
 
     //////////// FOR STORING OUTPUT /////////
 
     long double tot = (bg_changed.rows) * (bg_changed.cols) * 3 * 255;
     ofstream answer;
-    answer.open("out.txt");
+    answer.open("spatial_threaded.txt");
     answer << "time_sec,queue_density\n";
     for (int i = 0; i < aa.size(); i++)
         answer << (long double)(i + 1) / 15 << "," << aa[i] / tot << "\n";
@@ -145,5 +180,6 @@ int main(int argc, char *argv[])
     auto duration = duration_cast<microseconds>(stop - start);
     cout << "Time taken to run the program: " << duration.count() / 1000000 << endl;
 
+    pthread_exit(NULL);
     return 0;
 }
