@@ -17,25 +17,6 @@ Rect region; //region shows the section of window which is to be cropped
 vector<Rect> stripes;
 Mat gray_frame;
 
-// function to give the fraction of road occupied
-long double get_frac(Mat frame)
-{
-
-    long double cc = 0;
-    for (int i = 0; i < frame.rows; i++)
-    {
-        for (int j = 0; j < frame.cols; j++)
-        {
-            Vec3b bgrPixel = frame.at<Vec3b>(i, j);
-            // pixel values
-            cc += bgrPixel.val[0];
-            cc += bgrPixel.val[1];
-            cc += bgrPixel.val[2];
-        }
-    }
-    return cc;
-}
-
 vector<int> blacksum;
 
 // Function to find the queue density and fill the "aa" vector
@@ -50,8 +31,17 @@ void *findQueue(void *t1)
     absdiff(gray_frame1, bg_changed1, img3);
     Mat img3_binary;
     threshold(img3, img3_binary, 25, 255, THRESH_BINARY);
-    blacksum[id] = get_frac(img3_binary);
-
+    for (int i = 0; i < img3_binary.rows; i++)
+    {
+        for (int j = 0; j < img3_binary.cols; j++)
+        {
+            Vec3b bgrPixel = img3_binary.at<Vec3b>(i, j);
+            // pixel values
+            blacksum[id] += bgrPixel.val[0];
+            blacksum[id] += bgrPixel.val[1];
+            blacksum[id] += bgrPixel.val[2];
+        }
+    }
     pthread_exit(NULL);
 }
 
@@ -91,7 +81,9 @@ int main(int argc, char *argv[])
     bg_changed = bg_changed(region); //cropped background
 
     /////// Making NUM_THREADS number regions to divide into strips
-    int hori = bg_changed.cols / NUM_THREADS;
+
+    // cout << "cols in picture: "<<bg_changed.cols<<"\n";  The value is 328
+    int hori = bg_changed.cols / NUM_THREADS;   // if it won't diviide it then core dump error gets thrown
     for (int i = 0; i < NUM_THREADS; i++)
     {
         Rect r;
@@ -113,58 +105,94 @@ int main(int argc, char *argv[])
         ind[i] = i;
 
     int count = 0;
+
+    pthread_t threads[NUM_THREADS];
+    int rc;
+    Mat gray_frame1;
+    Mat frame;
     while (true)
     {
-        blacksum = vector<int>(NUM_THREADS, 0);
-        Mat frame;
         bool bSuccess = cap.read(frame);
         if (bSuccess == false)
         {
             cout << "Found the end of the video" << endl;
             break;
         }
-        cout << "Frame number: "<<count <<"\n";
-        count++;
+        // cout << "Frame number: " << count << "\n";
 
-
-        cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
-        warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
-        gray_frame = gray_frame(region);
+        cvtColor(frame, gray_frame1, COLOR_BGR2GRAY);
+        warpPerspective(gray_frame1, gray_frame1, H, gray_frame1.size());
+        gray_frame1 = gray_frame1(region);
 
         //////// CREATING THREADS FOR THEM
-        pthread_t threads[NUM_THREADS];
-        int rc;
-
-        for (int i = 0; i < NUM_THREADS; i++)
+        if (count == 0)
         {
-            // cout << "main() : creating thread, " << i << endl;
-            rc = pthread_create(&threads[i], NULL, findQueue, &ind[i]);
-            if (rc)
+            blacksum = vector<int>(NUM_THREADS, 0);
+            gray_frame = gray_frame1;
+            for (int i = 0; i < NUM_THREADS; i++)
             {
-                cout << "Error:unable to create thread," << rc << endl;
-                exit(-1);
+                // cout << "main() : creating thread, " << i << endl;
+                rc = pthread_create(&threads[i], NULL, findQueue, &ind[i]);
+                if (rc)
+                {
+                    cout << "Error:unable to create thread," << rc << endl;
+                    exit(-1);
+                }
+            }
+        }
+        else
+        {
+            void *status;
+            for (int i = 0; i < NUM_THREADS; i++)
+            {
+                rc = pthread_join(threads[i], &status);
+                if (rc)
+                {
+                    cout << "Error:unable to join," << rc << endl;
+                    exit(-1);
+                }
+                // cout << "Main: completed thread id :" << i;
+                // cout << "  exiting with status :" << status << endl;
+            }
+            int sum = 0;
+            for (auto x : blacksum)
+                sum += x;
+
+            aa.push_back(sum);
+
+            blacksum = vector<int>(NUM_THREADS, 0);
+            gray_frame = gray_frame1;
+            for (int i = 0; i < NUM_THREADS; i++)
+            {
+                // cout << "main() : creating thread, " << i << endl;
+                rc = pthread_create(&threads[i], NULL, findQueue, &ind[i]);
+                if (rc)
+                {
+                    cout << "Error:unable to create thread," << rc << endl;
+                    exit(-1);
+                }
             }
         }
 
-        void *status;
-        for (int i = 0; i < NUM_THREADS; i++)
-        {
-            rc = pthread_join(threads[i], &status);
-            if (rc)
-            {
-                cout << "Error:unable to join," << rc << endl;
-                exit(-1);
-            }
-            // cout << "Main: completed thread id :" << i;
-            // cout << "  exiting with status :" << status << endl;
-        }
-
-        int sum = 0;
-        for (auto x : blacksum)
-            sum += x;
-
-        aa.push_back(sum);
+        count++;
     }
+    void *status;
+    for (int i = 0; i < NUM_THREADS; i++)
+    {
+        rc = pthread_join(threads[i], &status);
+        if (rc)
+        {
+            cout << "Error:unable to join," << rc << endl;
+            exit(-1);
+        }
+        // cout << "Main: completed thread id :" << i;
+        // cout << "  exiting with status :" << status << endl;
+    }
+    int sum = 0;
+    for (auto x : blacksum)
+        sum += x;
+
+    aa.push_back(sum);
 
     //////////// FOR STORING OUTPUT /////////
 
