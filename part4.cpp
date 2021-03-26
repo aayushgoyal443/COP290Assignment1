@@ -146,27 +146,27 @@ int main (int argc, char* argv[]) {
 	  break;
 	}
        
-      int iddd=count%NUM_THREADS;
+      int thread_no=count%NUM_THREADS;
       
       
       if(count<NUM_THREADS){
-      	xyz[count%NUM_THREADS].fr=frame;
-      	xyz[count%NUM_THREADS].id=count;
-      	xyz[count%NUM_THREADS].ho=H;
-      	int rc = pthread_create(&threads[count%NUM_THREADS], NULL, process_frame, (void *)&xyz[count%NUM_THREADS]);
+      	xyz[thread_no].fr=frame;
+      	xyz[thread_no].id=count;
+      	xyz[thread_no].ho=H;
+      	int rc = pthread_create(&threads[thread_no], NULL, process_frame, (void *)&xyz[thread_no]);
       }
       else{
-      	rc = pthread_join(threads[count%NUM_THREADS], &status);
+      	rc = pthread_join(threads[thread_no], &status);
 	if (rc) {
 	  cout << "Error:unable to join," << rc << endl;
 	  exit(-1);
 	}
 	//cout <<count<<endl ;
 	//cout << "  exiting with status :" << status << endl;
-	xyz[count%NUM_THREADS].fr=frame;
-      	xyz[count%NUM_THREADS].id=count;
-      	xyz[count%NUM_THREADS].ho=H;
-      	int rc = pthread_create(&threads[count%NUM_THREADS], NULL, process_frame, (void *)&xyz[count%NUM_THREADS]);
+	xyz[thread_no].fr=frame;
+      	xyz[thread_no].id=count;
+      	xyz[thread_no].ho=H;
+      	int rc = pthread_create(&threads[thread_no], NULL, process_frame, (void *)&xyz[thread_no]);
       } 
       count++;     
     }
