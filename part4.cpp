@@ -6,16 +6,11 @@
 #include <pthread.h>
 #include <chrono>
 using namespace std::chrono;
-  
-
-#define NUM_THREADS 10
-
-
-
 
 using namespace cv;
 using namespace std;
 
+int NUM_THREADS =10;
 
 Mat bg_changed;
 Rect region; 
@@ -29,29 +24,7 @@ struct have_fun{
 vector<long double> aa;     //for queue density
 vector<long double> bb;     //for dynamic density
 
-vector<vector<long double>> abcx(NUM_THREADS);
-
-// function to give the fraction of road occupied
-
-void get_frac(Mat frame, int flag){
-
-  long double cc=0;
-  for(int i=0;i<frame.rows;i++){
-    for(int j=0;j<frame.cols;j++){
-      Vec3b bgrPixel = frame.at<Vec3b>(i,j);
-      // pixel values
-      cc+=bgrPixel.val[0];
-      cc+=bgrPixel.val[1];
-      cc+=bgrPixel.val[2];
-    
-    }
-  }
-  abcx[flag].push_back(cc);
-  //if(flag==0)aa.push_back(cc);  //for queue density
-  //else bb.push_back(cc);	 // for dynamic density
-}
-
-
+vector<vector<long double>> abcx;
 
 void *process_frame(void *t1){
   struct have_fun *abc;
@@ -72,18 +45,8 @@ void *process_frame(void *t1){
   Mat img3_binary;
   threshold(img3, img3_binary, 25, 255, THRESH_BINARY);
 	
-  long double cc=0;
-
-  for(int i=0;i<img3_binary.rows;i++){
-    for(int j=0;j<img3_binary.cols;j++){
-      Vec3b bgrPixel = img3_binary.at<Vec3b>(i,j);
-      // pixel values
-      cc+=bgrPixel.val[0];
-      cc+=bgrPixel.val[1];
-      cc+=bgrPixel.val[2];
-    }
-  }
-  cout<<abc->id<<endl;
+  long double cc = sum(img3_binary)[0];
+//   cout<<abc->id<<endl;
   abcx[(abc->id)%NUM_THREADS].push_back(cc);
 
   pthread_exit(NULL);
@@ -93,6 +56,8 @@ void *process_frame(void *t1){
 
 
 int main (int argc, char* argv[]) {
+	NUM_THREADS = stoi(argv[1]);
+	abcx = vector<vector<long double>>(NUM_THREADS);
 	auto start = high_resolution_clock::now();
   pthread_t threads[NUM_THREADS];
   have_fun xyz[NUM_THREADS];
@@ -102,7 +67,7 @@ int main (int argc, char* argv[]) {
     {
       cout << "Cannot open the video file" << endl;
       //cin.get(); 
-      pthread_exit(NULL);
+      return 0;
     }
     
     
@@ -194,9 +159,7 @@ int main (int argc, char* argv[]) {
   answer.close();
   auto stop = high_resolution_clock::now();
   auto duration = duration_cast<microseconds>(stop - start);
-  
+  cout << "Time taken to run the program: " << duration.count() / 1000000 << "\n\n";
 
-  cout << duration.count() << endl;
-  pthread_exit(NULL);
-
+  return 0;
 }
