@@ -19,6 +19,10 @@ Mat gray_frame;
 
 vector<int> blacksum;
 
+vector<bool> done_bg_strip;
+
+vector <Mat>  bg_stripes;
+
 // Function to find the queue density and fill the "aa" vector
 void *findQueue(void *t1)
 {
@@ -27,21 +31,14 @@ void *findQueue(void *t1)
     Rect strip = stripes[id];
     Mat img3;
     Mat gray_frame1 = gray_frame(strip);
-    Mat bg_changed1 = bg_changed(strip);
-    absdiff(gray_frame1, bg_changed1, img3);
+    if (!done_bg_strip[id]){
+        bg_stripes[id] = bg_changed(strip);
+        done_bg_strip[id]=true;
+    }
+    absdiff(gray_frame1, bg_stripes[id], img3);
     Mat img3_binary;
     threshold(img3, img3_binary, 25, 255, THRESH_BINARY);
-    for (int i = 0; i < img3_binary.rows; i++)
-    {
-        for (int j = 0; j < img3_binary.cols; j++)
-        {
-            Vec3b bgrPixel = img3_binary.at<Vec3b>(i, j);
-            // pixel values
-            blacksum[id] += bgrPixel.val[0];
-            blacksum[id] += bgrPixel.val[1];
-            blacksum[id] += bgrPixel.val[2];
-        }
-    }
+    blacksum[id] = sum(img3_binary)[0];
     pthread_exit(NULL);
 }
 
@@ -82,8 +79,7 @@ int main(int argc, char *argv[])
 
     /////// Making NUM_THREADS number regions to divide into strips
 
-    // cout << "cols in picture: "<<bg_changed.cols<<"\n";  The value is 328
-    int hori = bg_changed.cols / NUM_THREADS;   // if it won't diviide it then core dump error gets thrown
+    int hori = bg_changed.cols / NUM_THREADS; 
     for (int i = 0; i < NUM_THREADS; i++)
     {
         Rect r;
@@ -100,6 +96,9 @@ int main(int argc, char *argv[])
         stripes.push_back(r);
     }
 
+    done_bg_strip = vector<bool> (NUM_THREADS, false);
+    bg_stripes  = vector<Mat>(NUM_THREADS);
+
     int ind[NUM_THREADS] = {};
     for (int i = 0; i < NUM_THREADS; i++)
         ind[i] = i;
@@ -115,7 +114,7 @@ int main(int argc, char *argv[])
         bool bSuccess = cap.read(frame);
         if (bSuccess == false)
         {
-            cout << "Found the end of the video" << endl;
+            // cout << "Found the end of the video" << endl;
             break;
         }
         // cout << "Frame number: " << count << "\n";
@@ -199,15 +198,14 @@ int main(int argc, char *argv[])
     long double tot = (bg_changed.rows) * (bg_changed.cols) * 3 * 255;
     ofstream answer;
     answer.open("spatial_threaded.txt");
-    answer << "time_sec,queue_density\n";
+    answer << "time_sec\tqueue_density\n";
     for (int i = 0; i < aa.size(); i++)
-        answer << (long double)(i + 1) / 15 << "," << aa[i] / tot << "\n";
+        answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";
     answer.close();
 
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    cout << "Time taken to run the program: " << duration.count() / 1000000 << endl;
+    cout << "Time taken with "<<NUM_THREADS<<" threads: " << duration.count() / 1000000 << "s\n";
 
-    pthread_exit(NULL);
     return 0;
 }
