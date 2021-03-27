@@ -15,32 +15,30 @@ int NUM_THREADS = 10;
 Mat bg_changed;
 Rect region;
 
-struct have_fun
+struct parameters
 {
 	Mat fr;
-	Mat ho;
 	int id;
 };
 
 vector<long double> aa; //for queue density
-vector<long double> bb; //for dynamic density
 
 vector<vector<long double>> abcx;
 
+Mat H;
+
 void *process_frame(void *t1)
 {
-	struct have_fun *abc;
-	abc = (struct have_fun *)t1;
+	struct parameters *abc;
+	abc = (struct parameters *)t1;
 
 	Mat frame = abc->fr;
-	Mat H = abc->ho;
 
 	Mat gray_frame;
 	cvtColor(frame, gray_frame, COLOR_BGR2GRAY); //grayscale current frame
-	//show the frame in the created window
-	//imshow(window_name, frame);
 	warpPerspective(gray_frame, gray_frame, H, gray_frame.size()); //angle corrected current frame
 	gray_frame = gray_frame(region);							   //cropped current frame
+
 	Mat img3;
 	absdiff(gray_frame, bg_changed, img3); //after removing background
 	Mat img3_binary;
@@ -59,7 +57,7 @@ int main(int argc, char *argv[])
 	abcx = vector<vector<long double>>(NUM_THREADS);
 	auto start = high_resolution_clock::now();
 	pthread_t threads[NUM_THREADS];
-	have_fun xyz[NUM_THREADS];
+	parameters xyz[NUM_THREADS];
 	VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
 	int flag = 0;
 	if (cap.isOpened() == false)
@@ -74,17 +72,12 @@ int main(int argc, char *argv[])
 	//grayscale background image
 	cvtColor(bg, bg_changed, COLOR_BGR2GRAY);
 
-	String window_name = "Traffic_Video"; //window names
-	//String window_name2 = "Binary video";
-	//namedWindow(window_name, WINDOW_NORMAL);
-	//namedWindow(window_name2, WINDOW_NORMAL);
-
 	//coordinates for finding the homography matrix for angle correction of each frame
 	int x0 = 472, y0 = 52, x1 = 472, y1 = 830, x2 = 800, y2 = 830, x3 = 800, y3 = 52;
 	vector<Point2f> a = {Point2f(x0, y0), Point2f(x1, y1), Point2f(x2, y2), Point2f(x3, y3)};
 	vector<Point2f> b = {Point2f(984, 204), Point2f(264, 1068), Point2f(1542, 1068), Point2f(1266, 222)};
 
-	Mat H = findHomography(b, a);								   //homography matrix
+	H = findHomography(b, a);								   //homography matrix
 	warpPerspective(bg_changed, bg_changed, H, bg_changed.size()); //angle corrected
 
 	//region shows the section of window which is to be cropped
@@ -114,7 +107,6 @@ int main(int argc, char *argv[])
 		{
 			xyz[thread_no].fr = frame;
 			xyz[thread_no].id = count;
-			xyz[thread_no].ho = H;
 			int rc = pthread_create(&threads[thread_no], NULL, process_frame, (void *)&xyz[thread_no]);
 		}
 		else
@@ -129,7 +121,6 @@ int main(int argc, char *argv[])
 			//cout << "  exiting with status :" << status << endl;
 			xyz[thread_no].fr = frame;
 			xyz[thread_no].id = count;
-			xyz[thread_no].ho = H;
 			int rc = pthread_create(&threads[thread_no], NULL, process_frame, (void *)&xyz[thread_no]);
 		}
 		count++;
@@ -142,7 +133,7 @@ int main(int argc, char *argv[])
 	long frx = 0;
 	for (int i = 0; i < abcx.size(); i++)
 		frx += abcx[i].size();
-	aa.resize(frx + 10);
+	aa.resize(frx);
 	for (int i = 0; i < abcx.size(); i++)
 	{
 		for (int j = 0; j < abcx[i].size(); j++)
@@ -151,13 +142,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	long double tot = (328) * (778) * 3 * 255;
+	long double tot = (bg_changed.rows)*(bg_changed.cols)*(255);
 	ofstream answer;
-	answer.open("out_thread.txt");
+	answer.open("queue_temporal.txt");
 	//below part stores output in out.txt
 	answer << "time_sec\tqueue_density\n";
 	for (int i = 0; i < aa.size(); i++)
-		answer << (long double)(NUM_THREADS * i + 1) / 15 << "\t" << aa[i] / tot << "\n";
+		answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";
 	answer.close();
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
