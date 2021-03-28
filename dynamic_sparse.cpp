@@ -135,7 +135,7 @@ int main(int argc, char* argv[]){
 
   auto stop = high_resolution_clock::now();
   auto duration = duration_cast<microseconds>(stop - start);
-  cout << duration.count() << endl;
+  cout << "Time taken: " << duration.count() / 1000000 << "s\n";
   return 0;
 
 }
