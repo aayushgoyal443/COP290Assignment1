@@ -21,6 +21,11 @@ int main(int argc, char* argv[]){
     long double fr;
     long double den;
     string currentLine;
+    string label;
+    if(!file1.eof())file1>>label;
+    if(!file1.eof())file1>>label;
+    if(!file2.eof())file2>>label;
+    if(!file2.eof())file2>>label;
     while(!file1.eof()){
         file1>>fr;
         file1>>den;
