@@ -1,0 +1,39 @@
+Time taken using dense optical flow: 397s
+
+Time taken using sparse optical flow: 163s
+
+Sub sampling for Dynamic Density:
+
+Time taken if 0 frames dropped: 399s
+Time taken if 1 frames dropped: 213s
+Time taken if 2 frames dropped: 152s
+Time taken if 3 frames dropped: 123s
+Time taken if 4 frames dropped: 101s
+Time taken if 5 frames dropped: 88s
+
+Resolution variation for Dynamic Density:
+
+Time taken if reduced by factor 1: 402s
+Time taken if reduced by factor 2: 108s
+Time taken if reduced by factor 3: 64s
+Time taken if reduced by factor 4: 49s
+Time taken if reduced by factor 5: 42s
+Time taken if reduced by factor 6: 36s
+
+Spatial threading for Dynamic Density runtimes:
+
+Time taken with 1 threads: 370s
+Time taken with 2 threads: 231s
+Time taken with 3 threads: 181s
+Time taken with 4 threads: 161s
+Time taken with 5 threads: 157s
+Time taken with 6 threads: 136s
+
+Temporal threading for Dynamic Density runtimes:
+
+Time taken with 1 threads: 363s
+Time taken with 2 threads: 238s
+Time taken with 3 threads: 200s
+Time taken with 4 threads: 183s
+Time taken with 5 threads: 174s
+Time taken with 6 threads: 164s

@@ -23,28 +23,13 @@ struct parameters
     int id;
 };
 
-int size_rows=-1;
-int size_cols=-1;
-
 // Function to find the queue density and fill the "aa" vector
 void *process_frame(void *t1)
 {
     struct parameters *abc;
     abc = (struct parameters *)t1;
-    Mat frame = abc->fr;
-    Mat prvs = abc->pr;
-
-    Mat gray_frame, prvs_frame;
-
-    cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
-    warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
-    gray_frame = gray_frame(region);
-    cvtColor(prvs, prvs_frame, COLOR_BGR2GRAY);
-    warpPerspective(prvs_frame, prvs_frame, H, prvs_frame.size());
-    prvs_frame = prvs_frame(region);
-
-    if (size_cols==-1) size_cols = prvs_frame.cols;
-    if (size_rows==-1) size_rows = prvs_frame.rows;
+    Mat gray_frame = abc->fr;
+    Mat prvs_frame = abc->pr;
 
     Mat flow(prvs_frame.size(), CV_32FC2);
     calcOpticalFlowFarneback(prvs_frame, gray_frame, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
@@ -87,8 +72,8 @@ int main(int argc, char *argv[])
         cin.get();
         return -1;
     }
-    Mat prvs1;
-    cap.read(prvs1);
+    Mat prvs;
+    cap.read(prvs);
 
     //coordinates for finding the homography matrix for angle correction of each frame
     int x0 = 472, y0 = 52, x1 = 472, y1 = 830, x2 = 800, y2 = 830, x3 = 800, y3 = 52;
@@ -101,6 +86,10 @@ int main(int argc, char *argv[])
     region.height = a[2].y - a[0].y;
 
     H = findHomography(b, a); //homography matrix
+
+    cvtColor(prvs, prvs, COLOR_BGR2GRAY);
+    warpPerspective(prvs, prvs, H, prvs.size());
+    prvs = prvs(region);
 
     int count = 0;
     void *status;
@@ -118,12 +107,16 @@ int main(int argc, char *argv[])
 
         int thread_no = count % NUM_THREADS;
 
+        cvtColor(frame, frame, COLOR_BGR2GRAY);
+        warpPerspective(frame, frame, H, frame.size());
+        frame = frame(region);
+
         //////// CREATING THREADS FOR THEM
         if (count < NUM_THREADS)
         {
             xyz[thread_no].fr = frame;
             xyz[thread_no].id = count;
-            xyz[thread_no].pr = prvs1;
+            xyz[thread_no].pr = prvs;
             int rc = pthread_create(&threads[thread_no], NULL, process_frame, (void *)&xyz[thread_no]);
         }
         else
@@ -138,11 +131,11 @@ int main(int argc, char *argv[])
             //cout << "  exiting with status :" << status << endl;
             xyz[thread_no].fr = frame;
             xyz[thread_no].id = count;
-            xyz[thread_no].pr = prvs1;
+            xyz[thread_no].pr = prvs;
             int rc = pthread_create(&threads[thread_no], NULL, process_frame, (void *)&xyz[thread_no]);
         }
         count++;
-        prvs1 = frame;
+        prvs = frame;
     }
     for (int i = 0; i < NUM_THREADS; i++)
     {
@@ -163,9 +156,9 @@ int main(int argc, char *argv[])
 		}
 	}
 
-    long double tot = (size_rows)*(size_cols)* 255;
+    long double tot = (prvs.rows)*(prvs.cols)* 255;
     ofstream answer;
-    answer.open("dynamic_temporal.txt");
+    answer.open("dynamic/temporal/"+to_string(NUM_THREADS)+".txt");
     answer << "time_sec\tDynamic_density\n";
     for (int i = 0; i < aa.size(); i++)
         answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";

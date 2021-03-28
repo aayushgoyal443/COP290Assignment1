@@ -1,5 +1,3 @@
-// @TODO: Need to change the filter for threshold in all files
-
 #include <bits/stdc++.h>
 #include <opencv2/opencv.hpp>
 #include <iostream>
@@ -38,7 +36,7 @@ int findDynamic()
     cvtColor(hsv8, bgr, COLOR_HSV2BGR);
     cvtColor(bgr, flow, COLOR_BGR2GRAY);
     Mat flow_binary;
-    threshold(flow, flow_binary, 15, 255, THRESH_BINARY);
+    threshold(flow, flow_binary, 10, 255, THRESH_BINARY);
 
     return sum(flow_binary)[0];
 }
@@ -90,10 +88,10 @@ int main(int argc, char *argv[])
             break;
         }
         // cout << "Frame number: " << count << "\n";
-        if (count % 5!=0){
-            count++;
-            continue;
-        }
+        // if (count % 5!=0){
+        //     count++;
+        //     continue;
+        // }
         cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
         warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
         gray_frame = gray_frame(region);
@@ -109,15 +107,15 @@ int main(int argc, char *argv[])
 
     long double tot = (prvs_frame.rows) * (prvs_frame.cols) * 255;
 	ofstream answer;
-	answer.open("dynamic_baseline.txt");
+	answer.open("dynamic/baseline.txt");
 	answer << "time_sec\tdynamic_density\n";
 	for (int i = 0; i < aa.size(); i++)
-		answer << (long double)(5*i + 1) / 15 << "\t" << aa[i] / tot << "\n";
+		answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";
 	answer.close();
 
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "Time taken: " << duration.count() / 1000000 << "s\n";
+	cout << "Time taken using dense optical flow: " << duration.count() / 1000000 << "s\n";
 
     return 0;
 }
