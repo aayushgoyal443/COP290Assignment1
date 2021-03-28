@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
 	long double tot = (bg_changed.rows)*(bg_changed.cols)*(255);
 	ofstream answer;
-	answer.open("queue_temporal.txt");
+	answer.open("queue/temporal/"+to_string(NUM_THREADS)+".txt");
 	//below part stores output in out.txt
 	answer << "time_sec\tqueue_density\n";
 	for (int i = 0; i < aa.size(); i++)

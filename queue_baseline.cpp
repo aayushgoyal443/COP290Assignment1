@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
 	long double tot = (bg_changed.rows) * (bg_changed.cols) * 255;
 	ofstream answer;
-	answer.open("queue_baseline.txt");
+	answer.open("queue/baseline.txt");
 	answer << "time_sec\tqueue_density\n";
 	for (int i = 0; i < aa.size(); i++)
 		answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";

@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
 	}
 	tot *= 255;
 	ofstream answer;
-	answer.open("queue_spatial.txt");
+	answer.open("queue/spatial/"+to_string(NUM_THREADS)+ ".txt");
 	answer << "time_sec\tqueue_density\n";
 	for (int i = 0; i < aa.size(); i++)
 		answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";
