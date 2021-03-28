@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
     string baselineFile=argv[1];
     string newFile=argv[2];
     ifstream file1 (baselineFile);
-    ifstream file2 (baselineFile);
+    ifstream file2 (newFile);
     map<long double, long double> f1,f2;
     long double fr;
     long double den;
@@ -44,6 +44,6 @@ int main(int argc, char* argv[]){
     }
     sum/=f2.size();
     sum*=100;
-    cout<<sum;
+    cout<<"Percent error: "<<sum<<endl;
 }
 
