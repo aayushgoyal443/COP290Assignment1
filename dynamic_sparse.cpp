@@ -17,6 +17,7 @@ Mat prvs_frame;
 Mat toShow, mask;
 vector<Scalar> colors;
 vector<Point2f> corner_points_prev, corner_points_next;
+vector<long double> aa;
 
 void findSparse()
 {
@@ -26,16 +27,24 @@ void findSparse()
   calcOpticalFlowPyrLK(prvs_frame, gray_frame, corner_points_prev, corner_points_next,status,error,Size(15,15),2,criteria);
   vector<Point2f> forNextIter;
   int xyz=corner_points_prev.size();
+  long double s=0;
   for(int i=0;i<xyz;i++){
-    forNextIter.push_back(corner_points_next[i]);
-    line(mask, corner_points_prev[i], corner_points_next[i],colors[i], 2);
-    circle(gray_frame, corner_points_next[i], 5,colors[i], -1);
-
+    if(status[i]==1){
+      forNextIter.push_back(corner_points_next[i]);
+      line(mask, corner_points_prev[i], corner_points_next[i],colors[i], 2);
+      circle(gray_frame, corner_points_next[i], 5,colors[i], -1);
+      Point2f p1,p2;
+      p1=corner_points_prev[i];
+      p2=corner_points_next[i];
+      long double dis=sqrt((p1.x-p2.x)*(p1.x-p2.x)+(p1.y-p2.y)*(p1.y-p2.y));
+      s+=dis;
+    }
   }
-
+  aa.push_back(s);
   add(gray_frame, mask, toShow);  
 
 }
+
 
 
 int main(int argc, char* argv[])
@@ -52,7 +61,6 @@ int main(int argc, char* argv[])
   }
 
   VideoCapture cap(argv[1]);   //video filename is given as argument
-
   if (cap.isOpened() == false)  
     {
       cout << "Cannot open the video file" << endl;
@@ -68,6 +76,7 @@ int main(int argc, char* argv[])
   cvtColor(prvs, prvs_frame, COLOR_BGR2GRAY);
   //coordinates for finding the homography matrix for angle correction of each frame
   int x0 = 472, y0 = 52, x1 = 472, y1 = 830, x2 = 800, y2 = 830, x3 = 800, y3 = 52;
+
   vector<Point2f> a = {Point2f(x0, y0), Point2f(x1, y1), Point2f(x2, y2), Point2f(x3, y3)};
   vector<Point2f> b = {Point2f(984, 204), Point2f(264, 1068), Point2f(1542, 1068), Point2f(1266, 222)};
 
@@ -92,7 +101,6 @@ int main(int argc, char* argv[])
 
   while (true)
     {
-
       bool bSuccess = cap.read(frame); 
       if (bSuccess == false) 
 	{
@@ -100,11 +108,10 @@ int main(int argc, char* argv[])
 	  break;
 	}
 
-    if (count % 5!=0){
+      if (count % 5!=0){
         count++;
         continue;
-    }
-
+      }
       cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
       warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
       gray_frame = gray_frame(region);
@@ -123,9 +130,16 @@ int main(int argc, char* argv[])
 	}
     }  
 
+
+  ofstream answer;
+  answer.open("out_sparse.txt");
+  //below part stores output in out.txt
+  answer<<"time_sec,dynamic_density\n";
+  for(int i=0;i<aa.size();i++) answer<<(long double)(5*i+1)/15<<"\t"<<aa[i]<<"\n";
+  answer.close();
+
   auto stop = high_resolution_clock::now();
   auto duration = duration_cast<microseconds>(stop - start);
-
   cout << duration.count() << endl;
   return 0;
 
