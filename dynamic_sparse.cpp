@@ -19,8 +19,7 @@ vector<Scalar> colors;
 vector<Point2f> corner_points_prev, corner_points_next;
 vector<long double> aa;
 
-void findSparse()
-{
+void findSparse(){
   TermCriteria criteria = TermCriteria((TermCriteria::COUNT)+(TermCriteria::EPS),10,0.03);
   vector<uchar> status;
   vector<float> error;
@@ -42,13 +41,11 @@ void findSparse()
   }
   aa.push_back(s);
   add(gray_frame, mask, toShow);  
-
 }
 
 
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
   auto start = high_resolution_clock::now();
   //for helping in case of invalid command
   if (argc==1){
@@ -61,14 +58,13 @@ int main(int argc, char* argv[])
   }
 
   VideoCapture cap(argv[1]);   //video filename is given as argument
-  if (cap.isOpened() == false)  
-    {
-      cout << "Cannot open the video file" << endl;
-      cin.get(); 
-      return -1;
-    }
+  if (cap.isOpened() == false){
+    cout << "Cannot open the video file" << endl;
+    cin.get(); 
+    return -1;
+  }
   String window_name = "Traffic_Video";  //window names
-  namedWindow(window_name, WINDOW_NORMAL);
+  //namedWindow(window_name, WINDOW_NORMAL);
 
   Mat prvs;
   cap.read(prvs);
@@ -87,7 +83,7 @@ int main(int argc, char* argv[])
   H = findHomography(b, a); //homography matrix
   warpPerspective(prvs_frame, prvs_frame, H, prvs_frame.size()); //angle corrected
   prvs_frame = prvs_frame(region); //cropped background
-  int count = 1;
+  int count = 0;
   RNG rng;
   for(int i=0;i<100;i++){
     int r = rng.uniform(0, 256);
@@ -99,43 +95,42 @@ int main(int argc, char* argv[])
   mask = Mat::zeros(prvs_frame.size(), prvs_frame.type());
   goodFeaturesToTrack(prvs_frame, corner_points_prev, 100, 0.05, 100);
 
-  while (true)
-    {
-      bool bSuccess = cap.read(frame); 
-      if (bSuccess == false) 
-	{
-	  cout << "Found the end of the video" << endl;
-	  break;
-	}
+  while (true){
+    bool bSuccess = cap.read(frame); 
+    if (bSuccess == false){
+      cout << "Found the end of the video" << endl;
+      break;
+    }
 
-      if (count % 5!=0){
-        count++;
-        continue;
-      }
-      cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
-      warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
-      gray_frame = gray_frame(region);
-      findSparse();
-      imshow(window_name,toShow);
-      prvs_frame = gray_frame;
+    if (count % 5!=0){
       count++;
+      continue;
+    }
+    cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
+    warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
+    gray_frame = gray_frame(region);
+    findSparse();
+    //imshow(window_name,toShow);
+    prvs_frame = gray_frame;
+    count++;
 
-      corner_points_prev.clear();
-      mask = Mat::zeros(prvs_frame.size(), prvs_frame.type());
-      goodFeaturesToTrack(prvs_frame, corner_points_prev, 100, 0.05, 100);
-      if (waitKey(10) == 27)
-	{
-	  cout << "Esc key is pressed by user. Stopping the video" << endl;
-	  break;
-	}
-    }  
+    corner_points_prev.clear();
+    mask = Mat::zeros(prvs_frame.size(), prvs_frame.type());
+    goodFeaturesToTrack(prvs_frame, corner_points_prev, 100, 0.05, 100);
+    if (waitKey(10) == 27){
+      cout << "Esc key is pressed by user. Stopping the video" << endl;
+      break;
+    }
+  }  
 
 
   ofstream answer;
   answer.open("out_sparse.txt");
   //below part stores output in out.txt
-  answer<<"time_sec,dynamic_density\n";
-  for(int i=0;i<aa.size();i++) answer<<(long double)(5*i+1)/15<<"\t"<<aa[i]<<"\n";
+  answer<<"time_sec\tdynamic_density\n";
+  long double big=0;
+  for(int i=0;i<aa.size();i++)big=max(big,aa[i]);
+  for(int i=0;i<aa.size();i++) answer<<(long double)(5*i+1)/15<<"\t"<<aa[i]/(big+1)<<"\n";
   answer.close();
 
   auto stop = high_resolution_clock::now();
