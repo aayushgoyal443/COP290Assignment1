@@ -207,7 +207,7 @@ int main(int argc, char *argv[])
 
 	//////////// FOR STORING OUTPUT /////////
 
-	long double tot = (prvs1_changed.rows) * (prvs1_changed.cols) * 3 * 255;
+	long double tot = (prvs1_changed.rows) * (prvs1_changed.cols) * 255;
 	ofstream answer;
 	answer.open("dynamic/spatial/"+to_string(NUM_THREADS)+ ".txt");
 	answer << "time_sec\tDynamic_density\n";
