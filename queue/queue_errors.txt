@@ -1,0 +1,37 @@
+Errors obtained in different methods for queue density 
+
+Sub sampling for Queue Density:
+
+Percent Error if 0 frames dropped: 0
+Percent Error if 1 frames dropped: 0
+Percent Error if 2 frames dropped: 0
+Percent Error if 3 frames dropped: 0
+Percent Error if 4 frames dropped: 0
+Percent Error if 5 frames dropped: 0
+
+Resolution variation for Queue Density:
+
+Percent Error if reduced by factor 1: 0
+Percent Error if reduced by factor 2: 4.86794
+Percent Error if reduced by factor 3: 4.56993
+Percent Error if reduced by factor 4: 7.25928
+Percent Error if reduced by factor 5: 5.34017
+Percent Error if reduced by factor 6: 5.89267
+
+Spatial threading for Queue Density runtimes:
+
+Percent Error with 1 threads: 0
+Percent Error with 2 threads: 0
+Percent Error with 3 threads: 0
+Percent Error with 4 threads: 0
+Percent Error with 5 threads: 0
+Percent Error with 6 threads: 0
+
+Temporal threading for Queue Density runtimes:
+
+Percent Error with 1 threads: 0
+Percent Error with 2 threads: 0
+Percent Error with 3 threads: 0
+Percent Error with 4 threads: 0
+Percent Error with 5 threads: 0
+Percent Error with 6 threads: 0
