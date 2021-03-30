@@ -39,9 +39,11 @@ int main(int argc, char* argv[]){
     file1.close();
     file2.close();
     long double sum=0;
+    //cout<<sum<<endl;
     for(auto j:f2){
-        sum+=(abs(j.second-f1[j.first])/f1[j.first]);
+        sum+=(abs(j.second-f1[j.first])/(f1[j.first]+0.00000001));
     }
+    //cout<<sum<<endl;
     sum/=f2.size();
     sum*=100;
     cout<<"Percent error: "<<sum<<endl;
