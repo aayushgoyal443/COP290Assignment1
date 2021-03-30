@@ -3,11 +3,11 @@ Errors obtained in different methods for queue density
 Sub sampling for Queue Density:
 
 Percent Error if 0 frames dropped: 0
-Percent Error if 1 frames dropped: 0
-Percent Error if 2 frames dropped: 0
-Percent Error if 3 frames dropped: 0
-Percent Error if 4 frames dropped: 0
-Percent Error if 5 frames dropped: 0
+Percent Error if 1 frames dropped: 1.0952
+Percent Error if 2 frames dropped: 1.71351
+Percent Error if 3 frames dropped: 3.20353
+Percent Error if 4 frames dropped: 3.92634
+Percent Error if 5 frames dropped: 4.28856
 
 Resolution variation for Queue Density:
 
