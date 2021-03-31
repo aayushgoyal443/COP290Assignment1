@@ -1,15 +1,3 @@
-# all: output
-# 	./output
-
-# output: Assignment1.o
-# 	g++ Assignment1.o -o output -std=c++11 `pkg-config --cflags --libs opencv`
-
-# Assignment1.o: Assignment1.cpp
-# 	g++ -c Assignment1.cpp -std=c++11 `pkg-config --cflags --libs opencv`
-
-# clean: 
-# 	rm -rf *.o Assignment1.o outputs/Grayscale_empty.jpg output
-
 prepare_queue_exe:
 	g++ queue_baseline.cpp -o queue_baseline.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
 	g++ queue_spatial.cpp -o queue_spatial.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
