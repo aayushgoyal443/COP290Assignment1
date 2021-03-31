@@ -41,9 +41,14 @@ void findSparse()
 
 int main(int argc, char *argv[])
 {
+	if (argc != 2)
+	{
+		cout << "You need to pass two parameters: ./dynamic_sparse.exe, <video_file_name>\n";
+		return -1;
+	}
 	auto start = high_resolution_clock::now();
 
-	VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
+	VideoCapture cap(argv[1]); //video filename is given as argument
 	if (cap.isOpened() == false)
 	{
 		cout << "Cannot open the video file" << endl;

@@ -27,9 +27,14 @@ int findQueue()
 
 int main(int argc, char *argv[])
 {
+	if (argc != 3)
+	{
+		cout << "You need to pass three parameters: ./queue_resolution.exe, <video_file_name>, <scale_factor>\n";
+		return -1;
+	}
 	auto start = high_resolution_clock::now();
 
-	VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
+	VideoCapture cap(argv[1]); //video filename is given as argument
 
 	if (cap.isOpened() == false)
 	{
@@ -41,8 +46,17 @@ int main(int argc, char *argv[])
 	Mat bg = imread("background.jpg"); //background image
     int old_rows = bg.rows; //1080
     int old_cols = bg.cols; //1920
-    int factor = stoi(argv[1]);
-    int new_rows = old_rows/factor;
+	int factor;
+	try
+	{
+		factor = stoi(argv[2]);
+	}
+	catch(const std::exception& e)
+	{
+		cout << "Scale factor has to be integer" << '\n';
+		return -1;
+	}
+	int new_rows = old_rows/factor;
     int new_cols = old_cols/factor;
     resize(bg, bg, Size(new_cols,new_rows));
 

@@ -44,11 +44,16 @@ int findDynamic()
 int main(int argc, char *argv[])
 {
 
-    auto start = high_resolution_clock::now();
-    
-    VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
+    if (argc != 3)
+	{
+		cout << "You need to pass three parameters: ./dynamic_resolution.exe, <video_file_name>, <scale_factor>\n";
+		return -1;
+	}
+	auto start = high_resolution_clock::now();
 
-    if (cap.isOpened() == false)
+	VideoCapture cap(argv[1]); //video filename is given as argument
+
+	if (cap.isOpened() == false)
     {
         cout << "Cannot open the video file" << endl;
         cin.get();
@@ -59,8 +64,17 @@ int main(int argc, char *argv[])
     
     int old_rows = prvs.rows; //1080
     int old_cols = prvs.cols; //1920
-    int factor = stoi(argv[1]);
-    int new_rows = old_rows/factor;
+    int factor;
+	try
+	{
+		factor = stoi(argv[2]);
+	}
+	catch(const std::exception& e)
+	{
+		cout << "Scale factor has to be integer" << '\n';
+		return -1;
+	}
+	int new_rows = old_rows/factor;
     int new_cols = old_cols/factor;
         
     resize(prvs, prvs, Size(new_cols,new_rows));

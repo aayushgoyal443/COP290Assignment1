@@ -10,6 +10,8 @@ using namespace std::chrono;
 
 vector<long double> aa; //for queue density
 
+int frames_drop; // actually frames_drop-1 are the number of frames that are dropped
+
 Mat bg_changed; //grayscale background image
 Mat H;
 Rect region; //region shows the section of window which is to be cropped
@@ -27,9 +29,25 @@ int findQueue()
 
 int main(int argc, char *argv[])
 {
+	if (argc != 3)
+	{
+		cout << "You need to pass three parameters: ./queue_sub_sampling.exe, <video_file_name>, <frames_drop>\n";
+		return -1;
+	}
+	try
+	{
+		frames_drop = stoi(argv[2]);
+	}
+	catch(const std::exception& e)
+	{
+		cout << "frames_drop has to be integer" << '\n';
+		return -1;
+	}
+	frames_drop++;
+
 	auto start = high_resolution_clock::now();
 
-	VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
+	VideoCapture cap(argv[1]); //video filename is given as argument
 
 	if (cap.isOpened() == false)
 	{
@@ -63,6 +81,7 @@ int main(int argc, char *argv[])
 	Mat frame;
 	while (true)
 	{
+
 		bool bSuccess = cap.read(frame);
 		if (bSuccess == false)
 		{
@@ -70,6 +89,11 @@ int main(int argc, char *argv[])
 			break;
 		}
 		// cout << "Frame number: " << count << "\n";
+		if ((count % frames_drop) != 0)
+		{
+			count++;
+			continue;
+		}
 
 		cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
 		warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
@@ -87,15 +111,15 @@ int main(int argc, char *argv[])
 
 	long double tot = (bg_changed.rows) * (bg_changed.cols) * 255;
 	ofstream answer;
-	answer.open("queue/baseline.txt");
+	answer.open("queue/sub_sampling/"+to_string(frames_drop-1)+".txt");
 	answer << "time_sec\tqueue_density\n";
 	for (int i = 0; i < aa.size(); i++)
-		answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";
+		answer << (long double)(frames_drop * i + 1) / 15 << "\t" << aa[i] / tot << "\n";
 	answer.close();
 
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "Time taken: " << duration.count() / 1000000 << "s\n";	
+	cout << "Time taken if " << frames_drop - 1 << " frames dropped: " << duration.count() / 1000000 << "s\n";
 
 	return 0;
 }

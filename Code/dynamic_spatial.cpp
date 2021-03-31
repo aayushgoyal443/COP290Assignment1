@@ -56,11 +56,23 @@ void *findDynamic(void *t1)
 
 int main(int argc, char *argv[])
 {
-	NUM_THREADS = stoi(argv[1]);
-
+	if (argc != 3)
+	{
+		cout << "You need to pass three parameters: ./dynamic_spatial.exe, <video_file_name>, <NUM_THREADS>\n";
+		return -1;
+	}
+	try
+	{
+		NUM_THREADS = stoi(argv[2]);
+	}
+	catch(const std::exception& e)
+	{
+		cout << "NUM_THREADS has to be integer" << '\n';
+		return -1;
+	}
 	auto start = high_resolution_clock::now();
 
-	VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
+	VideoCapture cap(argv[1]); //video filename is given as argument
 
 	if (cap.isOpened() == false)
 	{

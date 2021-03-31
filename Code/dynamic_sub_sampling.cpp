@@ -10,6 +10,7 @@ using namespace std::chrono;
 
 vector <long double> aa; //for Dynamic density
 
+int frames_drop;
 Mat H;
 Rect region;
 Mat gray_frame;
@@ -43,12 +44,27 @@ int findDynamic()
 
 int main(int argc, char *argv[])
 {
+    if (argc != 3)
+	{
+		cout << "You need to pass three parameters: ./dynamic_sub_sampling.exe, <video_file_name>, <frames_drop>\n";
+		return -1;
+	}
+	try
+	{
+		frames_drop = stoi(argv[2]);
+	}
+	catch(const std::exception& e)
+	{
+		cout << "frames_drop has to be integer" << '\n';
+		return -1;
+	}
+	frames_drop++;
 
-    auto start = high_resolution_clock::now();
+	auto start = high_resolution_clock::now();
 
-    VideoCapture cap("trafficvideo.mp4"); //video filename is given as argument
+	VideoCapture cap(argv[1]); //video filename is given as argument
 
-    if (cap.isOpened() == false)
+	if (cap.isOpened() == false)
     {
         cout << "Cannot open the video file" << endl;
         cin.get();
@@ -88,10 +104,10 @@ int main(int argc, char *argv[])
             break;
         }
         // cout << "Frame number: " << count << "\n";
-        // if (count % 5!=0){
-        //     count++;
-        //     continue;
-        // }
+        if (count % frames_drop!=0){
+            count++;
+            continue;
+        }
         cvtColor(frame, gray_frame, COLOR_BGR2GRAY);
         warpPerspective(gray_frame, gray_frame, H, gray_frame.size());
         gray_frame = gray_frame(region);
@@ -107,15 +123,15 @@ int main(int argc, char *argv[])
 
     long double tot = (prvs_frame.rows) * (prvs_frame.cols) * 255;
 	ofstream answer;
-	answer.open("dynamic/baseline.txt");
+	answer.open("dynamic/sub_sampling/"+to_string(frames_drop-1)+".txt");
 	answer << "time_sec\tdynamic_density\n";
 	for (int i = 0; i < aa.size(); i++)
-		answer << (long double)(i + 1) / 15 << "\t" << aa[i] / tot << "\n";
+		answer << (long double)(frames_drop*i + 1) / 15 << "\t" << aa[i] / tot << "\n";
 	answer.close();
 
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<microseconds>(stop - start);
-	cout << "Time taken using dense optical flow: " << duration.count() / 1000000 << "s\n";
+	cout << "Time taken if " << frames_drop - 1 << " frames dropped: " << duration.count() / 1000000 << "s\n";
 
     return 0;
 }
