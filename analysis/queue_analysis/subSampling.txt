@@ -1,0 +1,7 @@
+Frames_Dropped  runtime percentError
+0   57  0
+1   43  1.0952
+2   37  1.71351
+3   34  3.20353
+4   33  3.92634
+5   31  4.28856
