@@ -10,12 +10,19 @@
 # clean: 
 # 	rm -rf *.o Assignment1.o outputs/Grayscale_empty.jpg output
 
+prepare_queue_exe:
+	g++ queue_baseline.cpp -o queue_baseline.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ queue_spatial.cpp -o queue_spatial.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ queue_temporal.cpp -o queue_temporal.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ queue_sub_sampling.cpp -o queue_sub_sampling.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ queue_resolution.cpp -o queue_resolution.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+
 run_queue:
 	make queue_baseline
 	make queue_sub_sampling
 	make queue_resolution
 	make queue_spatial
-	make queue_tempora
+	make queue_temporal
 
 run_dynamic:
 	make dynamic_baseline
@@ -24,6 +31,14 @@ run_dynamic:
 	make dynamic_resolution
 	make dynamic_spatial
 	make dynamic_temporal
+
+prepare_dynamic_exe:
+	g++ dynamic_baseline.cpp -o dynamic_baseline.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ dynamic_sparse.cpp -o dynamic_sparse.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ dynamic_sub_sampling.cpp -o dynamic_sub_sampling.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ dynamic_resolution.cpp -o dynamic_resolution.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ dynamic_spatial.cpp -o dynamic_spatial.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv`
+	g++ dynamic_temporal.cpp -o dynamic_temporal.exe -lpthread -std=c++11 `pkg-config --cflags --libs opencv` 
 	
 allpart2:
 	g++ assignment1_2.cpp -o part2.exe -std=c++11 `pkg-config --cflags --libs opencv`

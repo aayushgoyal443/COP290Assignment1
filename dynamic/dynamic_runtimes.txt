@@ -1,6 +1,6 @@
 Time taken using dense optical flow: 397s
 
-Time taken using sparse optical flow: 163s
+Time taken using sparse optical flow: 151s
 
 Sub sampling for Dynamic Density:
 
